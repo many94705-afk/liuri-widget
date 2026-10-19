@@ -1,5 +1,9 @@
 # 流日小窗
 
+📱 **手机版**：[点这里打开](https://many94705-afk.github.io/liuri-widget/)（用浏览器打开后添加到主屏幕即可）
+
+💻 **Mac 版**：[下载 liuri-widget-mac.zip](https://github.com/many94705-afk/liuri-widget/releases/download/V1.0/liuri-widget-mac.zip)（安装方法见下方）
+
 一张小卡片，一眼看到**此刻**流日接通了你的哪些通道：
 
 - 每条通道从几点到几点、还剩多久；
@@ -10,7 +14,7 @@
 
 ## 手机上使用（iPhone / 安卓）
 
-1. 用手机浏览器打开本项目的网页版：`https://many94705-afk.github.io/liuri-widget/`
+1. 用手机浏览器打开本项目的网页版：<https://many94705-afk.github.io/liuri-widget/>
 2. iPhone：Safari 点“分享 → 添加到主屏幕”；安卓：浏览器菜单里选“添加到主屏幕”。
 3. 以后点桌面图标即可打开。第一次填写出生日期、时间和出生城市；打开过一次后断网也能用。
 
