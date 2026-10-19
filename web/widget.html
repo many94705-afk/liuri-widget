@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>流日小窗</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="流日小窗">
+<meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#efe4d9">
+<link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-180.png"><link rel="manifest" href="manifest.json">
+<style>
+:root{color-scheme:light;--text:#2f2621;--muted:#5f4b3e;--faint:#3b2a1f1f;--accent:#c8366b;--pill:#e2457f;--card:#fbefe2;--input:#3b2a1f12}
+*{box-sizing:border-box}html,body{margin:0;background:transparent;color:var(--text);font:13px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;cursor:default}
+html.web body{background:#efe4d9;min-height:100vh;padding:max(24px,env(safe-area-inset-top)) 12px max(24px,env(safe-area-inset-bottom))}html.web .card{border-radius:22px;box-shadow:0 10px 30px #8a5b3a26;margin:auto}
+.card{width:100%;max-width:420px;padding:14px 16px 14px;background:var(--card)}
+.top{display:flex;align-items:center;gap:6px;padding-bottom:8px}.top h1{margin:0;font-size:14px;font-weight:600;flex:1;color:var(--text)}.top time{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.gear{border:0;background:none;color:var(--muted);font-size:14px;padding:0 0 0 6px;cursor:pointer;line-height:1}.gear:hover{color:var(--text)}
+.ch{padding:9px 0;border-top:1px solid var(--faint)}.ch:first-child{border-top:0;padding-top:2px}
+.row{display:flex;align-items:baseline;gap:6px}.no{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}.name{font-size:14px}.left{margin-left:auto;color:var(--accent);font-size:12px;white-space:nowrap}
+.src{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:12px;color:var(--muted)}.gl{background:var(--pill);color:#fff;font-weight:600;border-radius:9px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.span{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:3px;background:var(--faint);border-radius:2px;margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.next{margin-top:4px;padding-top:9px;border-top:1px solid var(--faint);color:var(--muted);font-size:12px;line-height:1.7}.next b{color:var(--text);font-weight:600}
+.msg{color:var(--muted);padding:6px 0 4px;line-height:1.6}
+.form{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;margin-top:4px}.form label{color:var(--muted);font-size:12px}
+.form input{width:100%;padding:6px 8px;border:0;border-radius:7px;background:var(--input);color:var(--text);font:13px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-user-select:text;user-select:text}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.btn{border:0;border-radius:7px;padding:6px 14px;background:var(--accent);color:#fff;font-size:13px;cursor:pointer}.btn.ghost{background:var(--input);color:var(--text)}
+.hint{color:var(--muted);font-size:11px;line-height:1.6;margin-top:10px}.hint b{color:var(--text)}.warn{color:var(--accent)}
+</style></head><body><div class="card" id="card">
+<div class="top" id="drag"><h1>此刻接通</h1><time id="clock"></time><button class="gear" id="gear" title="个人资料">⚙︎</button></div>
+<div id="main"><div class="msg">计算中…</div></div>
+</div>
+<script src="vendor/swisseph.js"></script>
+<script src="vendor/swisseph-wasm.js"></script>
+<script src="engine.js"></script>
+<script src="channels.js"></script>
+<script src="cities.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const native=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.liuri;
+if(!native)document.documentElement.classList.add('web');
+const post=msg=>{if(native)native.postMessage(msg)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0'),hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
+const PROFILE_KEY='liuri-profile';
+
+// 个人资料：Mac 小程序里由原生代码保存（window.LIURI_PROFILE），网页里存在浏览器。
+function loadProfile(){
+  if(window.LIURI_PROFILE&&window.LIURI_PROFILE.birthDate)return window.LIURI_PROFILE;
+  try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||'null')}catch(e){return null}
+}
+function saveProfile(p){try{localStorage.setItem(PROFILE_KEY,JSON.stringify(p))}catch(e){}post({type:'profile',profile:p})}
+const zone=v=>{v=(v||'').trim();return !v||v==='+08:00'?'Asia/Shanghai':v};
+
+function dayLabel(d){
+  const a=new Date();a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);
+  const diff=Math.round((b-a)/864e5);
+  return diff===0?'':diff===1?'明天 ':diff===-1?'昨天 ':`${d.getMonth()+1}/${d.getDate()} `;
+}
+const when=ms=>{const d=new Date(ms);return dayLabel(d)+hm(d)};
+function duration(ms){
+  const m=Math.max(0,Math.round(ms/6e4)),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mm=m%60;
+  return d?`${d}天${h?h+'小时':''}`:h?`${h}小时${mm?mm+'分':''}`:`${mm}分钟`;
+}
+
+let profile=loadProfile(),birth=null,data=null,editing=false;
+
+function fit(){post({type:'height',value:Math.ceil($('card').getBoundingClientRect().height)})}
+
+function render(){
+  const now=new Date();
+  $('clock').textContent=hm(now);
+  if(editing)return;
+  if(!data){fit();return}
+  const max=data.maxDays;
+  // 只显示自己没有、由流日补上的闸门；每颗星体一行，例如「57.6 流日设计 · 月亮」。
+  const rows=data.channels.map(c=>{
+    const left=c.end?`还剩 ${duration(c.end-now)}`:`${max} 天以上`;
+    const span=`${c.start?when(c.start):'早已接通'} – ${c.end?when(c.end):'…'}`;
+    const flows=c.gates.filter(g=>!g.sources.some(s=>s.owner==='个人')).flatMap(g=>g.sources.map(s=>({gate:g.gate,...s})));
+    const srcs=flows.map((s,i)=>`<div class="src"><span class="gl">${s.gate}.${s.line}</span>${esc(s.owner+s.side)} · ${esc(s.planet)}${i===0?`<span class="span">${span}</span>`:''}</div>`).join('');
+    const bar=c.start&&c.end?`<div class="bar"><i style="width:${Math.min(100,Math.max(0,(now-c.start)/(c.end-c.start)*100)).toFixed(1)}%"></i></div>`:'';
+    return `<div class="ch"><div class="row"><span class="no">${esc(c.channel)}</span><span class="name">${esc(CH_NAME[c.channel]||'')}</span><span class="left">${left}</span></div>${srcs}${bar}</div>`;
+  }).join('')||'<div class="msg">现在没有被流日接通的通道</div>';
+  const next=data.upcoming.slice(0,2).map(u=>`${when(u.start)} – ${u.end?when(u.end):'…'} 接通 <b>${esc(u.channel)} ${esc(CH_NAME[u.channel]||'')}</b>`).join('<br>');
+  $('main').innerHTML=rows+(next?`<div class="next">${next}</div>`:'');
+  fit();
+}
+
+function compute(){
+  if(!profile){showForm(true);return}
+  try{
+    if(!birth)birth=LiuriEngine.birthChart(LiuriEngine.localToUtc(profile.birthDate,profile.birthTime,zone(profile.timezone)));
+    data=LiuriEngine.nowView(null,Date.now(),birth);
+  }catch(e){data=null;$('main').innerHTML=`<div class="msg">计算失败：${esc(e.message)}</div>`}
+  render();
+}
+
+// 有通道到点结束或开始、或距上次计算超过 30 分钟时重新计算。
+function stale(){
+  if(!data)return !!profile;
+  const now=Date.now();
+  return [...data.channels.map(c=>c.end),...data.upcoming.map(u=>u.start)].some(t=>t&&t<=now)||now-data.now>30*6e4;
+}
+
+function showForm(first){
+  editing=true;
+  const p=profile||{birthDate:'',birthTime:'',city:''};
+  // 旧资料只有时区没有城市：北京时间显示为「中国大陆」，其他直接显示时区。
+  const city=p.city||(!p.timezone?'':['+08:00','Asia/Shanghai'].includes(p.timezone)?'中国大陆':p.timezone);
+  $('main').innerHTML=`${first?'<div class="msg">先填写你的出生信息，之后打开就能看到此刻接通的通道。</div>':''}
+    <div class="form"><label>出生日期</label><input id="fDate" type="date" value="${esc(p.birthDate)}">
+    <label>出生时间</label><input id="fTime" type="time" value="${esc(p.birthTime)}">
+    <label>出生城市</label><input id="fCity" placeholder="例如 成都、香港、东京" value="${esc(city)}"></div>
+    <div class="hint" id="fZoneHint"></div>
+    <div class="actions">${profile?'<button class="btn ghost" id="fCancel">取消</button>':''}<button class="btn" id="fSave">保存</button></div>
+    <div class="hint">出生信息只保存在这台设备上。</div>`;
+  const check=()=>{
+    const r=LiuriCities.resolve($('fCity').value);
+    $('fZoneHint').innerHTML=r.error?`<span class="warn">${esc(r.error)}</span>`:
+      `按 <b>${esc(r.label)}</b> 换算${r.zone==='Asia/Shanghai'?'，自动处理 1986—1991 年夏令时':''}`;
+    fit();return r;
+  };
+  $('fCity').oninput=check;
+  if(city)check();
+  $('fSave').onclick=()=>{
+    const r=check();
+    const p={birthDate:$('fDate').value,birthTime:$('fTime').value,city:$('fCity').value.trim(),timezone:r.zone};
+    if(!p.birthDate||!p.birthTime){$('fDate').focus();return}
+    if(r.error){$('fCity').focus();return}
+    profile=p;saveProfile(p);birth=null;editing=false;$('main').innerHTML='<div class="msg">计算中…</div>';fit();setTimeout(compute,20);
+  };
+  if($('fCancel'))$('fCancel').onclick=()=>{editing=false;render()};
+  fit();
+}
+
+$('gear').onclick=()=>editing?(profile&&(editing=false,render())):showForm(false);
+window.liuriShowSettings=()=>showForm(!profile);
+window.liuriRefresh=()=>{birth=null;compute()};
+// 每分钟刷新时钟和剩余时间；电脑唤醒或小窗重新露出来时立刻刷新一次。
+const tick=()=>stale()&&!editing?compute():render();
+window.liuriTick=tick;
+setInterval(tick,60e3);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
+$('clock').textContent=hm(new Date());fit();
+// 网页版（https，例如 GitHub Pages）缓存全部文件，打开过一次后断网也能用。
+if(!native&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+LiuriEngine.init().then(()=>setTimeout(compute,10)).catch(e=>{$('main').innerHTML=`<div class="msg">星历加载失败：${esc(e.message)}</div>`;fit()});
+</script></body></html>
