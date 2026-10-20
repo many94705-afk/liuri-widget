@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", ".."))
-from engine import chart, connections  # noqa: E402
+from engine import MONTH_EXCLUDE, chart, connections  # noqa: E402
 from timeline import now_view  # noqa: E402
 
 random.seed(42)
@@ -24,12 +24,12 @@ for _ in range(12):
     now = datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=random.randint(0, 365 * 86400))
     v = now_view(birth, now)
     views.append({"birthMs": ms(birth), "nowMs": ms(now), "view": v})
-# 月历：每天中午 12:00（北京时间）接通的通道，与正式版 /api/month 相同。
+# 月历：每天中午 12:00（北京时间）接通的通道，与正式版 /api/month 相同（排除只由月亮点亮的闸门）。
 months = []
 for _ in range(3):
     birth = start + timedelta(seconds=random.randint(0, 55 * 365 * 86400))
     birth_chart = chart(birth)
-    days = [[c["channel"] for c in connections(birth_chart, chart(datetime(2026, 10, d, 4, tzinfo=timezone.utc)))]
+    days = [[c["channel"] for c in connections(birth_chart, chart(datetime(2026, 10, d, 4, tzinfo=timezone.utc)), MONTH_EXCLUDE)]
             for d in range(1, 32)]
     months.append({"birthMs": ms(birth), "days": days})
 json.dump({"charts": charts, "views": views, "months": months}, open(os.path.join(HERE, "reference.json"), "w"), ensure_ascii=False)

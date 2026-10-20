@@ -87,15 +87,19 @@
     return { personality: positions(ms), design: positions(designAt), designTime: designAt };
   }
 
-  function gates(one) {
+  function gates(one, exclude = []) {
     const set = new Set();
-    for (const part of [one.personality, one.design]) for (const p of Object.values(part)) set.add(p.gl.gate);
+    for (const part of [one.personality, one.design]) {
+      for (const [name, p] of Object.entries(part)) if (!exclude.includes(name)) set.add(p.gl.gate);
+    }
     return set;
   }
+  // 月历只看长期的星体：月亮大约半天就换一个闸门，只靠它点亮的闸门不算（同一闸门还有其他星体时照常计入）。
+  const MONTH_EXCLUDE = ['月亮'];
 
   // 流日接通的通道：本人没有定义，但本人 + 流日凑齐两端，且至少一端来自流日。
-  function connections(personal, transit) {
-    const mine = personal.gates || gates(personal), flow = gates(transit), result = [];
+  function connections(personal, transit, exclude = []) {
+    const mine = personal.gates || gates(personal), flow = gates(transit, exclude), result = [];
     for (const [a, b] of CHANNELS) {
       if (mine.has(a) && mine.has(b)) continue;
       if ((mine.has(a) || flow.has(a)) && (mine.has(b) || flow.has(b)) && (flow.has(a) || flow.has(b))) {
@@ -211,7 +215,7 @@
     return utc;
   }
 
-  const api = { init, positions, chart, designMoment, connections, birthChart, nowView, localToUtc, mapLongitude };
+  const api = { init, positions, chart, designMoment, connections, birthChart, nowView, localToUtc, mapLongitude, MONTH_EXCLUDE };
   if (typeof module === 'object' && module.exports) module.exports = api;
   root.LiuriEngine = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -43,7 +43,8 @@ body.flowtab .tabs{border-top-color:transparent}
 .mlabel{margin-left:auto;color:var(--muted);font-size:12px}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.wk{text-align:center;color:var(--muted);font-size:11px;padding-bottom:2px}
 .day{min-height:52px;padding:3px 2px;border-radius:7px;background:#ffffff80;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
-.day b{font-size:11px;font-weight:600}.day i{font-style:normal;font-size:9.5px;line-height:1.35;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.day b{font-size:11px;font-weight:600}.day i{align-self:stretch;text-align:center;font-style:normal;font-size:9.5px;line-height:1.5;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap;border-radius:4px}
+.day i.band{position:relative;color:#3a2a20;font-weight:600}.day i.jl{margin-left:-4px;border-top-left-radius:0;border-bottom-left-radius:0}.day i.jr{margin-right:-4px;border-top-right-radius:0;border-bottom-right-radius:0}.day i.gap{visibility:hidden}
 .day.today b{background:var(--pill);color:#fff;border-radius:8px;padding:0 5px}.day.sel{outline:1.5px solid var(--accent)}.day.empty{background:none;cursor:default}
 .hint{color:var(--muted);font-size:11px;line-height:1.6;margin-top:10px}.hint b{color:var(--text)}.warn{color:var(--accent)}
 </style></head><body><div class="card" id="card">
@@ -64,6 +65,7 @@ body.flowtab .tabs{border-top-color:transparent}
 <script src="engine.js"></script>
 <script src="channels.js"></script>
 <script src="cities.js"></script>
+<script src="monthlayout.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const native=window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.liuri;
@@ -165,7 +167,7 @@ const pickTime=()=>{
 };
 $('tDate').onchange=pickTime;$('tTime').onchange=pickTime;
 
-// ---- 手机版：本月通道月历（每天中午 12:00 接通的通道，与正式版月历相同）----
+// ---- 手机版：本月通道月历（每天中午 12:00 接通的通道，与正式版月历相同；不含只由月亮点亮的闸门）----
 let monthCache={key:null,days:[]};
 // 月历显示的月份：跟着上面查看的日期走，也可以单独前后翻月或直接选月份。
 let calMonth=null;
@@ -178,17 +180,20 @@ function renderMonth(){
   if(monthCache.key!==key){
     const days=[];
     for(let d=1;d<=new Date(y,m+1,0).getDate();d++){
-      days.push(LiuriEngine.connections(birth,LiuriEngine.chart(new Date(y,m,d,12).getTime())).map(c=>c.channel));
+      days.push(LiuriEngine.connections(birth,LiuriEngine.chart(new Date(y,m,d,12).getTime()),LiuriEngine.MONTH_EXCLUDE).map(c=>c.channel));
     }
     monthCache={key,days};
   }
   const today=new Date();
   const blanks=Array(new Date(y,m,1).getDay()).fill('<div class="day empty"></div>');
+  // 延续的通道排在上面、同一周保持同一行；持续 3 天以上的连成色带，名称只在开头和每周第一天显示
+  const L=MonthLayout.layoutMonth(monthCache.days,new Date(y,m,1).getDay());
+  const tag=c=>c?`<i class="${[c.long&&'band',c.joinL&&'jl',c.joinR&&'jr'].filter(Boolean).join(' ')}" title="${c.channel} ${CH_NAME[c.channel]||''} · 连续 ${c.days} 天"${c.long?` style="background:${c.color}"`:''}>${c.label?c.channel:'&nbsp;'}</i>`:'<i class="gap">&nbsp;</i>';
   const cells=monthCache.days.map((list,i)=>{
     const d=i+1,cls=['day'];
     if(y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate())cls.push('today');
     if(y===sel.getFullYear()&&m===sel.getMonth()&&d===sel.getDate())cls.push('sel');
-    return `<div class="${cls.join(' ')}" data-day="${d}"><b>${d}</b>${list.map(c=>`<i>${c}</i>`).join('')}</div>`;
+    return `<div class="${cls.join(' ')}" data-day="${d}"><b>${d}</b>${L[i].map(tag).join('')}</div>`;
   });
   $('monthTitle').textContent=`${y}年${m+1}月`;
   $('mInput').value=`${y}-${pad(m+1)}`;

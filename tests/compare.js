@@ -35,9 +35,9 @@ const E = require('../web/engine.js');
   for (const m of ref.months) {
     const birth = E.birthChart(m.birthMs);
     m.days.forEach((expected, i) => assert.deepEqual(
-      E.connections(birth, E.chart(Date.UTC(2026, 9, i + 1, 4))).map(c => c.channel), expected, `2026-10-${i + 1}`));
+      E.connections(birth, E.chart(Date.UTC(2026, 9, i + 1, 4)), E.MONTH_EXCLUDE).map(c => c.channel), expected, `2026-10-${i + 1}`));
   }
-  console.log(`月历：${ref.months.length} 个人 × 31 天每天中午接通的通道全部一致`);
+  console.log(`月历：${ref.months.length} 个人 × 31 天每天中午接通的通道（不含只由月亮点亮的）全部一致`);
   console.log(`12 个人 × 此刻接通：${n} 条通道的起止时间（到分钟）、星体来源、24 小时预告（含结束时间）全部一致`);
 })().catch(e => { console.error(e); process.exitCode = 1; });
 
