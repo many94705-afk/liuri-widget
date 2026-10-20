@@ -5,7 +5,7 @@
 <link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-180.png"><link rel="manifest" href="manifest.json">
 <style>
 :root{color-scheme:light;--text:#2f2621;--muted:#5f4b3e;--faint:#3b2a1f1f;--accent:#c8366b;--pill:#e2457f;--card:#fbefe2;--input:#3b2a1f12}
-*{box-sizing:border-box}html,body{margin:0;background:transparent;color:var(--text);font:13px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;cursor:default}
+*{box-sizing:border-box}[hidden]{display:none!important}html,body{margin:0;background:transparent;color:var(--text);font:13px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none;cursor:default}
 html.web body{background:#efe4d9;min-height:100vh;padding:max(24px,env(safe-area-inset-top)) 12px max(24px,env(safe-area-inset-bottom))}html.web .card{border-radius:22px;box-shadow:0 10px 30px #8a5b3a26;margin:auto}
 .card{width:100%;max-width:420px;padding:14px 16px 14px;background:var(--card)}
 .top{display:flex;align-items:center;gap:6px;padding-bottom:8px}.top h1{margin:0;font-size:14px;font-weight:600;flex:1;color:var(--text)}.top time{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
@@ -17,14 +17,48 @@ html.web body{background:#efe4d9;min-height:100vh;padding:max(24px,env(safe-area
 .bar{height:3px;background:var(--faint);border-radius:2px;margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);border-radius:2px}
 .next{margin-top:4px;padding-top:9px;border-top:1px solid var(--faint);color:var(--muted);font-size:12px;line-height:1.7}.next b{color:var(--text);font-weight:600}
 .msg{color:var(--muted);padding:6px 0 4px;line-height:1.6}
-.form{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;margin-top:4px}.form label{color:var(--muted);font-size:12px}
-.form input{width:100%;padding:6px 8px;border:0;border-radius:7px;background:var(--input);color:var(--text);font:13px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-user-select:text;user-select:text}
+.desc{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.5}
+.form{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;align-items:center;margin-top:4px}.form label{color:var(--muted);font-size:12px}
+.form input{width:100%;min-width:0;max-width:100%;display:block;-webkit-appearance:none;appearance:none;min-height:30px;text-align:left;padding:6px 8px;border:0;border-radius:7px;background:var(--input);color:var(--text);font:13px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;-webkit-user-select:text;user-select:text}
 .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.btn{border:0;border-radius:7px;padding:6px 14px;background:var(--accent);color:#fff;font-size:13px;cursor:pointer}.btn.ghost{background:var(--input);color:var(--text)}
+.guide{margin-top:16px;padding-top:14px;border-top:1px solid var(--faint)}.guide h2{margin:0 0 10px;font-size:14px}
+.step{display:flex;gap:10px;margin-top:10px}.step b{font-size:13px}.step p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.6}
+.num{flex:none;width:20px;height:20px;border-radius:50%;background:var(--pill);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.timebar{display:none}
+/* 手机版：调时间做成和底部标签栏连在一起的工具条（同一块底色、无悬浮阴影），位置固定，切换日期时只有上面的卡片变化 */
+html.web .timebar{display:block;position:fixed;z-index:5;left:0;right:0;bottom:calc(55px + env(safe-area-inset-bottom));padding:9px 16px 3px;background:#fbefe2f0;border-top:1px solid var(--faint);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.tb-inner{display:flex;align-items:center;gap:6px;max-width:420px;margin:auto}
+.pick{position:relative;flex:1;min-width:0;height:32px;border-radius:8px;background:var(--input);display:flex;align-items:center;justify-content:center;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;cursor:pointer}
+.pick.time{flex:.55}.pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;-webkit-appearance:none;appearance:none}
+.arrow{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:var(--input);color:var(--text);font-size:20px;line-height:1;cursor:pointer}
+.nowbtn{flex:none;width:66px;height:32px;padding:0;border:0;border-radius:8px;background:none;color:var(--muted);font:13px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;cursor:default}
+.nowbtn.back{background:#c8366b1a;color:var(--accent);font-weight:600;cursor:pointer}
+.sm{padding:6px 8px;font-size:12px}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:6px 16px calc(8px + env(safe-area-inset-bottom));background:#fbefe2f0;border-top:1px solid var(--faint);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.tabs button{flex:1;border:0;border-radius:10px;background:none;color:var(--muted);font:600 14px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;padding:10px 0;cursor:pointer}.tabs button.on{background:var(--input);color:var(--accent)}
+html.web body.tabbed{padding-bottom:calc(130px + env(safe-area-inset-bottom))}
+body.flowtab .tabs{border-top-color:transparent}
+.mhead{display:flex;align-items:center;gap:6px;margin-bottom:8px}.mhead .sm{padding:5px 11px;font-size:14px;line-height:1}
+.mpick{position:relative;font-size:15px;font-weight:600;padding:3px 4px;cursor:pointer}.mpick input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.mlabel{margin-left:auto;color:var(--muted);font-size:12px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.wk{text-align:center;color:var(--muted);font-size:11px;padding-bottom:2px}
+.day{min-height:52px;padding:3px 2px;border-radius:7px;background:#ffffff80;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
+.day b{font-size:11px;font-weight:600}.day i{font-style:normal;font-size:9.5px;line-height:1.35;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.day.today b{background:var(--pill);color:#fff;border-radius:8px;padding:0 5px}.day.sel{outline:1.5px solid var(--accent)}.day.empty{background:none;cursor:default}
 .hint{color:var(--muted);font-size:11px;line-height:1.6;margin-top:10px}.hint b{color:var(--text)}.warn{color:var(--accent)}
 </style></head><body><div class="card" id="card">
-<div class="top" id="drag"><h1>此刻接通</h1><time id="clock"></time><button class="gear" id="gear" title="个人资料">⚙︎</button></div>
+<div class="top" id="drag"><h1 id="title">此刻接通</h1><time id="clock"></time><button class="gear" id="gear" title="个人资料">⚙︎</button></div>
+<div class="timebar" id="timebar" hidden><div class="tb-inner">
+  <button class="arrow" id="prevDay" title="前一天" aria-label="前一天">‹</button><label class="pick" id="pickDate"><span id="tDateLabel"></span><input type="date" id="tDate"></label><label class="pick time"><span id="tTimeLabel"></span><input type="time" id="tTime"></label><button class="arrow" id="nextDay" title="后一天" aria-label="后一天">›</button><button class="nowbtn" id="nowBtn">此刻</button>
+</div></div>
 <div id="main"><div class="msg">计算中…</div></div>
 </div>
+<div class="card month" id="monthCard" hidden>
+  <div class="mhead"><button class="btn ghost sm" id="prevMonth">‹</button>
+    <label class="mpick"><span id="monthTitle"></span> ▾<input type="month" id="mInput"></label>
+    <button class="btn ghost sm" id="nextMonth">›</button><span class="mlabel">通道月历</span></div>
+  <div id="cal" class="cal"></div></div>
+<nav class="tabs" id="tabs" hidden><button id="tabFlow" class="on">此刻流日</button><button id="tabMonth">通道月历</button></nav>
 <script src="vendor/swisseph.js"></script>
 <script src="vendor/swisseph-wasm.js"></script>
 <script src="engine.js"></script>
@@ -47,10 +81,13 @@ function loadProfile(){
 function saveProfile(p){try{localStorage.setItem(PROFILE_KEY,JSON.stringify(p))}catch(e){}post({type:'profile',profile:p})}
 const zone=v=>{v=(v||'').trim();return !v||v==='+08:00'?'Asia/Shanghai':v};
 
+// 日期以正在查看的那一天为准：同一天只写时间；查看此刻时用「明天、昨天」，查看其他时刻时直接写日期。
 function dayLabel(d){
-  const a=new Date();a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);
+  const a=new Date(moment());a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);
   const diff=Math.round((b-a)/864e5);
-  return diff===0?'':diff===1?'明天 ':diff===-1?'昨天 ':`${d.getMonth()+1}/${d.getDate()} `;
+  if(diff===0)return '';
+  if(!viewAt&&Math.abs(diff)===1)return diff>0?'明天 ':'昨天 ';
+  return `${d.getMonth()+1}/${d.getDate()} `;
 }
 const when=ms=>{const d=new Date(ms);return dayLabel(d)+hm(d)};
 function duration(ms){
@@ -59,12 +96,17 @@ function duration(ms){
 }
 
 let profile=loadProfile(),birth=null,data=null,editing=false;
+// 手机版可以查看任意时刻：viewAt 为 null 表示「此刻」（实时更新），否则是选定的时间戳。
+let viewAt=null;
+const moment=()=>viewAt??Date.now();
 
 function fit(){post({type:'height',value:Math.ceil($('card').getBoundingClientRect().height)})}
 
 function render(){
-  const now=new Date();
-  $('clock').textContent=hm(now);
+  const now=new Date(moment());
+  $('clock').textContent=viewAt?'':hm(new Date());
+  $('title').textContent=viewAt?`${now.getMonth()+1}月${now.getDate()}日 ${hm(now)} 接通`:'此刻接通';
+  chrome();
   if(editing)return;
   if(!data){fit();return}
   const max=data.maxDays;
@@ -75,8 +117,8 @@ function render(){
     const flows=c.gates.filter(g=>!g.sources.some(s=>s.owner==='个人')).flatMap(g=>g.sources.map(s=>({gate:g.gate,...s})));
     const srcs=flows.map((s,i)=>`<div class="src"><span class="gl">${s.gate}.${s.line}</span>${esc(s.owner+s.side)} · ${esc(s.planet)}${i===0?`<span class="span">${span}</span>`:''}</div>`).join('');
     const bar=c.start&&c.end?`<div class="bar"><i style="width:${Math.min(100,Math.max(0,(now-c.start)/(c.end-c.start)*100)).toFixed(1)}%"></i></div>`:'';
-    return `<div class="ch"><div class="row"><span class="no">${esc(c.channel)}</span><span class="name">${esc(CH_NAME[c.channel]||'')}</span><span class="left">${left}</span></div>${srcs}${bar}</div>`;
-  }).join('')||'<div class="msg">现在没有被流日接通的通道</div>';
+    return `<div class="ch"><div class="row"><span class="no">${esc(c.channel)}</span><span class="name">${esc(CH_NAME[c.channel]||'')}</span><span class="left">${left}</span></div><div class="desc">${esc(CH_INFO[c.channel]||'')}</div>${srcs}${bar}</div>`;
+  }).join('')||`<div class="msg">${viewAt?'这个时刻':'现在'}没有被流日接通的通道</div>`;
   const next=data.upcoming.slice(0,2).map(u=>`${when(u.start)} – ${u.end?when(u.end):'…'} 接通 <b>${esc(u.channel)} ${esc(CH_NAME[u.channel]||'')}</b>`).join('<br>');
   $('main').innerHTML=rows+(next?`<div class="next">${next}</div>`:'');
   fit();
@@ -86,30 +128,118 @@ function compute(){
   if(!profile){showForm(true);return}
   try{
     if(!birth)birth=LiuriEngine.birthChart(LiuriEngine.localToUtc(profile.birthDate,profile.birthTime,zone(profile.timezone)));
-    data=LiuriEngine.nowView(null,Date.now(),birth);
+    data=LiuriEngine.nowView(null,moment(),birth);
   }catch(e){data=null;$('main').innerHTML=`<div class="msg">计算失败：${esc(e.message)}</div>`}
   render();
+  renderMonth();
 }
+
+// ---- 手机版：调时间 ----
+const dateText=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+// 手机版底部两个标签：默认「此刻流日」，另一个是「通道月历」。
+let tab='flow';
+function chrome(){
+  const show=!native&&!!profile&&!editing;
+  $('timebar').hidden=!show;$('tabs').hidden=!show;
+  document.body.classList.toggle('tabbed',show);
+  document.body.classList.toggle('flowtab',show&&tab==='flow');
+  $('card').hidden=show&&tab==='month';
+  $('monthCard').hidden=!(show&&tab==='month');
+  $('tabFlow').className=tab==='flow'?'on':'';$('tabMonth').className=tab==='month'?'on':'';
+  if(!show)return;
+  const d=new Date(moment());
+  if(document.activeElement!==$('tDate'))$('tDate').value=dateText(d);
+  if(document.activeElement!==$('tTime'))$('tTime').value=hm(d);
+  $('tDateLabel').textContent=`${d.getMonth()+1}月${d.getDate()}日 周${'日一二三四五六'[d.getDay()]}`;
+  $('tTimeLabel').textContent=hm(d);
+  $('nowBtn').textContent=viewAt?'回到此刻':'此刻';
+  $('nowBtn').className='nowbtn'+(viewAt?' back':'');
+}
+function goTo(ms){viewAt=ms;calMonth=null;compute()}
+$('prevDay').onclick=()=>goTo(moment()-864e5);
+$('nextDay').onclick=()=>goTo(moment()+864e5);
+$('nowBtn').onclick=()=>{if(viewAt){viewAt=null;calMonth=null;compute()}};
+const pickTime=()=>{
+  const [y,m,d]=($('tDate').value||'').split('-').map(Number),[h,mi]=($('tTime').value||'00:00').split(':').map(Number);
+  if(y)goTo(new Date(y,m-1,d,h||0,mi||0).getTime());
+};
+$('tDate').onchange=pickTime;$('tTime').onchange=pickTime;
+
+// ---- 手机版：本月通道月历（每天中午 12:00 接通的通道，与正式版月历相同）----
+let monthCache={key:null,days:[]};
+// 月历显示的月份：跟着上面查看的日期走，也可以单独前后翻月或直接选月份。
+let calMonth=null;
+function renderMonth(){
+  if(native||!profile||!birth)return;
+  const sel=new Date(moment());
+  if(!calMonth)calMonth={y:sel.getFullYear(),m:sel.getMonth()};
+  const {y,m}=calMonth;
+  const key=`${y}-${m}|${JSON.stringify(profile)}`;
+  if(monthCache.key!==key){
+    const days=[];
+    for(let d=1;d<=new Date(y,m+1,0).getDate();d++){
+      days.push(LiuriEngine.connections(birth,LiuriEngine.chart(new Date(y,m,d,12).getTime())).map(c=>c.channel));
+    }
+    monthCache={key,days};
+  }
+  const today=new Date();
+  const blanks=Array(new Date(y,m,1).getDay()).fill('<div class="day empty"></div>');
+  const cells=monthCache.days.map((list,i)=>{
+    const d=i+1,cls=['day'];
+    if(y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate())cls.push('today');
+    if(y===sel.getFullYear()&&m===sel.getMonth()&&d===sel.getDate())cls.push('sel');
+    return `<div class="${cls.join(' ')}" data-day="${d}"><b>${d}</b>${list.map(c=>`<i>${c}</i>`).join('')}</div>`;
+  });
+  $('monthTitle').textContent=`${y}年${m+1}月`;
+  $('mInput').value=`${y}-${pad(m+1)}`;
+  $('cal').innerHTML=['日','一','二','三','四','五','六'].map(w=>`<div class="wk">${w}</div>`).join('')+blanks.join('')+cells.join('');
+}
+const switchTab=t=>{tab=t;chrome();window.scrollTo(0,0)};
+$('tabFlow').onclick=()=>switchTab('flow');
+$('tabMonth').onclick=()=>switchTab('month');
+// 点月历里的某一天：切回「此刻流日」，显示那天同一时刻接通的通道。
+$('cal').onclick=e=>{
+  const cell=e.target.closest('[data-day]');if(!cell)return;
+  tab='flow';window.scrollTo(0,0);
+  const cur=new Date(moment());
+  goTo(new Date(calMonth.y,calMonth.m,+cell.dataset.day,cur.getHours(),cur.getMinutes()).getTime());
+};
+const shiftMonth=n=>{const d=new Date(calMonth.y,calMonth.m+n,1);calMonth={y:d.getFullYear(),m:d.getMonth()};renderMonth()};
+$('prevMonth').onclick=()=>shiftMonth(-1);
+$('nextMonth').onclick=()=>shiftMonth(1);
+$('mInput').onchange=()=>{const [y,m]=($('mInput').value||'').split('-').map(Number);if(y){calMonth={y,m:m-1};renderMonth()}};
 
 // 有通道到点结束或开始、或距上次计算超过 30 分钟时重新计算。
 function stale(){
   if(!data)return !!profile;
+  if(viewAt)return false;
   const now=Date.now();
   return [...data.channels.map(c=>c.end),...data.upcoming.map(u=>u.start)].some(t=>t&&t<=now)||now-data.now>30*6e4;
 }
 
+// 手机版第一次打开时，在表单下方说明怎么用。
+const GUIDE=`<div class="guide"><h2>怎么使用</h2>
+  <div class="step"><span class="num">1</span><div><b>填写出生信息</b>
+    <p>在上面填出生日期、出生时间（越准确越好）和出生城市，点“保存”。</p>
+    <p>所有计算都在你的手机上完成，出生信息只保存在这台手机里，不会上传到任何地方，可以放心填写。</p></div></div>
+  <div class="step"><span class="num">2</span><div><b>查看此刻接通的通道</b>
+    <p>保存后，这里会显示此刻流日接通了你的哪些人类图通道：每条通道的含义、从几点到几点、还剩多久，以及是哪颗星体接通的。底部还会预告接下来 24 小时将接通的通道。</p>
+    <p>以后打开就能直接看到，每分钟自动更新。</p></div></div></div>`;
+
 function showForm(first){
   editing=true;
+  chrome();
   const p=profile||{birthDate:'',birthTime:'',city:''};
   // 旧资料只有时区没有城市：北京时间显示为「中国大陆」，其他直接显示时区。
   const city=p.city||(!p.timezone?'':['+08:00','Asia/Shanghai'].includes(p.timezone)?'中国大陆':p.timezone);
-  $('main').innerHTML=`${first?'<div class="msg">先填写你的出生信息，之后打开就能看到此刻接通的通道。</div>':''}
+  $('main').innerHTML=`${first&&native?'<div class="msg">先填写你的出生信息，之后打开就能看到此刻接通的通道。</div>':''}
     <div class="form"><label>出生日期</label><input id="fDate" type="date" value="${esc(p.birthDate)}">
     <label>出生时间</label><input id="fTime" type="time" value="${esc(p.birthTime)}">
     <label>出生城市</label><input id="fCity" placeholder="例如 成都、香港、东京" value="${esc(city)}"></div>
     <div class="hint" id="fZoneHint"></div>
     <div class="actions">${profile?'<button class="btn ghost" id="fCancel">取消</button>':''}<button class="btn" id="fSave">保存</button></div>
-    <div class="hint">出生信息只保存在这台设备上。</div>`;
+    <div class="hint">出生信息只保存在这台设备上。</div>
+    ${first&&!native?GUIDE:''}`;
   const check=()=>{
     const r=LiuriCities.resolve($('fCity').value);
     $('fZoneHint').innerHTML=r.error?`<span class="warn">${esc(r.error)}</span>`:

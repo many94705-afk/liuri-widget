@@ -24,5 +24,13 @@ for _ in range(12):
     now = datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=random.randint(0, 365 * 86400))
     v = now_view(birth, now)
     views.append({"birthMs": ms(birth), "nowMs": ms(now), "view": v})
-json.dump({"charts": charts, "views": views}, open(os.path.join(HERE, "reference.json"), "w"), ensure_ascii=False)
-print("charts", len(charts), "views", len(views))
+# 月历：每天中午 12:00（北京时间）接通的通道，与正式版 /api/month 相同。
+months = []
+for _ in range(3):
+    birth = start + timedelta(seconds=random.randint(0, 55 * 365 * 86400))
+    birth_chart = chart(birth)
+    days = [[c["channel"] for c in connections(birth_chart, chart(datetime(2026, 10, d, 4, tzinfo=timezone.utc)))]
+            for d in range(1, 32)]
+    months.append({"birthMs": ms(birth), "days": days})
+json.dump({"charts": charts, "views": views, "months": months}, open(os.path.join(HERE, "reference.json"), "w"), ensure_ascii=False)
+print("charts", len(charts), "views", len(views), "months", len(months))
